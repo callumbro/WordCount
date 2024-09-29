@@ -82,29 +82,7 @@
                     }
 
                     List<string> fileLineWords = await ParseFileLine(fileLine);
-
-                    //foreach (var word in fileLineWords)
-                    //{
-                    //    // Add the new word to the buffer.
-                    //    wordBuffer[wordBufferCount] = word.ToLower();
-                    //    wordBufferCount++;
-
-                    //    // Check if the buffer is full and can be sent for processing.
-                    //    if (wordBufferCount == WordsPerThread)
-                    //    {
-                    //        await ProcessWordBuffer(wordBuffer, wordBufferCount);
-
-                    //        // Reset buffer count so new set of words can be assigned.
-                    //        wordBufferCount = 0;
-                    //    }
-                    //}
                 }
-
-                //// Process last partial word buffer
-                //if (wordBufferCount < WordsPerThread)
-                //{
-                //    await ProcessWordBuffer(wordBuffer, wordBufferCount);
-                //}
             }
         }
 
