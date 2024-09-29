@@ -108,7 +108,7 @@
                         word = "";
 
                         // Check if the buffer is full and can be sent for processing.
-                        if (wordBufferCount == WordsPerThread)
+                        if (wordBufferCount == WordsPerBatch)
                         {
                             await ProcessWordBuffer(wordBuffer, wordBufferCount);
 
@@ -124,7 +124,7 @@
                 }
 
                 // Process last partial word buffer
-                if (wordBufferCount < WordsPerThread)
+                if (wordBufferCount < WordsPerBatch)
                 {
                     await ProcessWordBuffer(wordBuffer, wordBufferCount);
                 }
