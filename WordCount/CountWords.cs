@@ -52,21 +52,13 @@
             #endregion
 
 
-            // The standard English punctuation is as follows: period, comma, apostrophe, quotation, question, exclamation, brackets, braces, parenthesis, dash, hyphen, ellipsis, colon, semicolon.
-            // https://www.lynchburg.edu/
-            char[] separators = [' ', '\r', '\n', '.', ',', '\'', '’', '"', '“', '”', '?', '!', '-', '–', '—', '(', ')', '[', ']', '{', '}', '…', ':', ';'];
-
             // Read in the file, using a FileStream and StreamReader so large files do not have to be completely loaded into memory.
             using (FileStream fileStream = File.OpenRead(inputFilePath))
             using (StreamReader fileStreamReader = new StreamReader(fileStream))
             {
                 #region Stream Reading Variables
 
-                // The character read in from the file.
-                char singleLetter;
-
-                // Stores the word as it is being assembled.
-                string word = string.Empty;
+                string fileLine = string.Empty;
 
                 // Buffer to store a batch of words for processing.
                 string[] wordBuffer = new string[WordsPerThread];
@@ -79,56 +71,97 @@
                 // Thought of loading in a set amount of bytes at a time from the file, but did not want to cut a word in half.
                 while (!fileStreamReader.EndOfStream)
                 {
-                    // Read in the next character.
-                    singleLetter = (char)fileStreamReader.Read();
+                    // Read in the next line.
+                    fileLine = fileStreamReader
+                        .ReadLine();
 
-                    if (separators.Contains(singleLetter)
-                        || fileStreamReader.EndOfStream)
+                    if (fileLine == null)
                     {
-                        if (fileStreamReader.EndOfStream)
-                        {
-                            // Add the last character before the file ends on the next loop.
-                            word += singleLetter;
-                        }
-
-                        // Separator reached, we have found a word.
-
-                        // Skip processing if the word is empty.
-                        // Chose to include single letter words.
-                        if (word.Length == 0)
-                        {
-                            continue;
-                        }
-
-                        // Add the new word to the buffer.
-                        wordBuffer[wordBufferCount] = word.ToLower();
-                        wordBufferCount++;
-
-                        // Reset for the next word.
-                        word = "";
-
-                        // Check if the buffer is full and can be sent for processing.
-                        if (wordBufferCount == WordsPerThread)
-                        {
-                            await ProcessWordBuffer(wordBuffer, wordBufferCount);
-
-                            // Reset buffer count so new set of words can be assigned.
-                            wordBufferCount = 0;
-                        }
+                        // No content in file, break loop.
+                        break;
                     }
-                    else
+
+                    List<string> fileLineWords = await ParseFileLine(fileLine);
+
+                    //foreach (var word in fileLineWords)
+                    //{
+                    //    // Add the new word to the buffer.
+                    //    wordBuffer[wordBufferCount] = word.ToLower();
+                    //    wordBufferCount++;
+
+                    //    // Check if the buffer is full and can be sent for processing.
+                    //    if (wordBufferCount == WordsPerThread)
+                    //    {
+                    //        await ProcessWordBuffer(wordBuffer, wordBufferCount);
+
+                    //        // Reset buffer count so new set of words can be assigned.
+                    //        wordBufferCount = 0;
+                    //    }
+                    //}
+                }
+
+                //// Process last partial word buffer
+                //if (wordBufferCount < WordsPerThread)
+                //{
+                //    await ProcessWordBuffer(wordBuffer, wordBufferCount);
+                //}
+            }
+        }
+
+        public async Task<List<string>> ParseFileLine(string fileLine)
+        {
+            List<string> fileLineWords = new();
+
+            // Stores the word as it is being assembled.
+            string word = string.Empty;
+            bool wordComplete = false;
+
+            // The standard English punctuation is as follows: period, comma, apostrophe, quotation, question, exclamation, brackets, braces, parenthesis, dash, hyphen, ellipsis, colon, semicolon.
+            // https://www.lynchburg.edu/
+            char[] separators = [' ', '\r', '\n', '.', ',', '\'', '’', '"', '“', '”', '?', '!', '-', '–', '—', '(', ')', '[', ']', '{', '}', '…', ':', ';'];
+
+            for (int letterIndex = 0; letterIndex < fileLine.Length; letterIndex++)
+            {
+                wordComplete = false;
+
+                // If a separator was found.
+                if (separators.Contains(fileLine[letterIndex]))
+                {
+                    wordComplete = true;
+                }
+                else
+                {
+                    // Add character to continue spelling the word.
+                    word += fileLine[letterIndex];
+
+                    // Save the word that ends with the end of the line.
+                    if (letterIndex == fileLine.Length - 1)
                     {
-                        // Add character to continue spelling the word.
-                        word += singleLetter;
+                        wordComplete = true;
                     }
                 }
 
-                // Process last partial word buffer
-                if (wordBufferCount < WordsPerThread)
+                if (wordComplete)
                 {
-                    await ProcessWordBuffer(wordBuffer, wordBufferCount);
+                    // Separator reached, we have found a word.
+
+                    // Skip processing if the word is empty.
+                    // Chose to include single letter words, thus "Length == 0" and not "Length > 1".
+                    if (word.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    fileLineWords.Add(word.ToLower());
+
+                    // Reset for the next word.
+                    word = "";
                 }
             }
+
+            await ProcessWordBuffer(fileLineWords.ToArray(), fileLineWords.Count);
+
+            return fileLineWords;
         }
 
         public async Task ProcessWordBuffer(string[] wordBuffer, int wordBufferCount)
