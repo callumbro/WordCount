@@ -8,6 +8,8 @@
         {
             string inputFilePath = string.Empty;
             string outputFileName = string.Empty;
+            bool outputToConsole = false;
+            int wordsPerBatch = 0;
 
             if (args.Length == 0)
             {
@@ -26,6 +28,12 @@
                 {
                     Console
                         .WriteLine("Usage: wordcount <input file path> <output file name>");
+                    Console
+                        .WriteLine("Optional parameters:");
+                    Console
+                        .WriteLine("'-console' to output the results to console and the output file.");
+                    Console
+                        .WriteLine("'batch <integer>' to change the word batch size away from the default of 5000.");
 
                     return;
                 }
@@ -40,6 +48,29 @@
                     case 1:
                         outputFileName = args[parameterNumber];
                         break;
+                }
+
+                if (args[parameterNumber] == "-console"
+                    || args[parameterNumber] == "-c")
+                {
+                    outputToConsole = true;
+                }
+                else if (args[parameterNumber] == "-batch")
+                {
+                    parameterNumber++;
+                    if (parameterNumber > args.Length)
+                    {
+                        Console
+                            .WriteLine("No number of words per batch specified.");
+                        return;
+                    }
+
+                    if (!int.TryParse(args[parameterNumber], out wordsPerBatch))
+                    {
+                        Console
+                            .WriteLine("Specified number of words per batch is not an integer.");
+                        return;
+                    }
                 }
             }
 
@@ -64,18 +95,25 @@
 
             // Try and get the folder the input file is located in, to put the output file in the same folder.
             string outputFilePath = outputFileName;
-            string outputDirectory = Path.GetDirectoryName(inputFilePath);
+            string outputDirectory = Path
+                .GetDirectoryName(inputFilePath);
             if (!string.IsNullOrEmpty(outputDirectory))
             {
-                outputFilePath = Path.Combine(outputDirectory, outputFileName);
+                outputFilePath = Path
+                    .Combine(outputDirectory, outputFileName);
             }
 
-            CountWords countWords = new();
+            CountWords countWords;
+            if (wordsPerBatch > 0)
+                countWords = new(wordsPerBatch);
+            else
+                countWords = new();
+
             countWords
                 .ComputeWordCounts(inputFilePath)
                 .Wait();
             countWords
-                .OutputWordCounts(outputFilePath);
+                .OutputWordCounts(outputFilePath, outputToConsole);
         }
 
     }

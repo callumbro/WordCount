@@ -13,7 +13,7 @@
         // Using a Dictionary because the key is indexed for very fast lookups.
         public Dictionary<string, int> WordCounts { get; private set; }
 
-        private static int WordsPerThread;
+        private static int WordsPerBatch;
 
         #endregion
 
@@ -22,11 +22,11 @@
         /// <summary>
         /// Will count the number of each word from the input file and will save to the output file.
         /// </summary>
-        /// <param name="wordsPerThread">The number of words to process for each thread, default is 5000 as that seemed to be the best on my computer.</param>
-        public CountWords(int wordsPerThread = 5000)
+        /// <param name="wordsPerBatch">The number of words to process for each thread, default is 5000 as that seemed to be the best on my computer.</param>
+        public CountWords(int wordsPerBatch = 5000)
         {
             WordCounts = new Dictionary<string, int>();
-            WordsPerThread = wordsPerThread;
+            WordsPerBatch = wordsPerBatch;
         }
 
         #endregion
@@ -69,7 +69,7 @@
                 string word = string.Empty;
 
                 // Buffer to store a batch of words for processing.
-                string[] wordBuffer = new string[WordsPerThread];
+                string[] wordBuffer = new string[WordsPerBatch];
                 int wordBufferCount = 0;
 
                 #endregion
@@ -159,7 +159,7 @@
         /// <summary>
         /// Outputs the results to the file specified. 
         /// </summary>
-        public void OutputWordCounts(string outputFilePath)
+        public void OutputWordCounts(string outputFilePath, bool writeToConsole = false)
         {
             // Sort by the count, and then the words before printing.
             WordCounts = WordCounts
@@ -174,8 +174,12 @@
                 foreach (var word in WordCounts)
                 {
                     output = $"{word.Key}, {word.Value}";
-                    Console
-                        .WriteLine(output);
+
+                    if (writeToConsole)
+                    {
+                        Console
+                            .WriteLine(output);
+                    }
 
                     fileWriter
                         .WriteLine(output);
