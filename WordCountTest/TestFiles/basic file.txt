@@ -1,0 +1,9 @@
+this is a, basic!file to?test      … word counts
+
+!even need 'some" ’new
+lines "too.
+
+Also TEST capitals: and; colons
+(brackets) & [other brackets] maybe some {curly} braces too
+
+“quotation” word test
