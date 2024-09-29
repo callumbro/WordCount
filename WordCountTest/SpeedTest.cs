@@ -6,7 +6,7 @@
 
     public class SpeedTest
     {
-        // Test file provided free by https://www.gutenberg.org
+        // Test file provided free by https://www.gutenberg.org/ebooks/100
         [Fact]
         public async Task ShakespeareTestAsync()
         {
